@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>daisyUI [class*=] in :has() restyle</title>
+<link id="css" href="https://cdn.jsdelivr.net/npm/daisyui@5.8.2/daisyui.css" rel="stylesheet">
+</head>
+<body>
+<p>CSS: <b id="state">daisyUI 5.8.2 as published</b></p>
+<p>Press "Toggle a class on a cell" a few times, then "Use the fix", then "Toggle a class on a cell" again.</p>
+<p>Last toggle (style and layout): <b id="time">–</b></p>
+<button type="button" class="btn" id="toggle">Toggle a class on a cell</button>
+<button type="button" class="btn" id="fix">Use the fix</button>
+<div class="tabs tabs-lift">
+  <input type="radio" name="tabs" class="tab" aria-label="Tab 1" checked>
+  <div class="tab-content"><table class="table"><tbody id="rows"></tbody></table></div>
+  <input type="radio" name="tabs" class="tab" aria-label="Tab 2">
+  <div class="tab-content">Tab 2</div>
+</div>
+<script>
+  rows.innerHTML = ('<tr>' + '<td>cell</td>'.repeat(8) + '</tr>').repeat(500);
+  toggle.onclick = () => {
+    let start = performance.now();
+    rows.querySelector('td').classList.toggle('some-class');
+    document.body.offsetHeight; // run style and layout now, so the time includes them
+    time.textContent = `${(performance.now() - start).toFixed(1)} ms`;
+  };
+  // The same CSS without `[class*=...]` in :has(): `,[class*=btn]` removed from alert.css,
+  // `[class*=dropdown-content]` changed to `.dropdown-content` in dropdown.css.
+  fix.onclick = async () => {
+    let link = document.getElementById('css');
+    let style = document.createElement('style');
+    style.textContent = (await (await fetch(link.href)).text())
+      .replaceAll(',[class*=btn]', '')
+      .replaceAll('~[class*=dropdown-content]', '~.dropdown-content');
+    link.replaceWith(style);
+    state.textContent = 'daisyUI 5.8.2 without [class*=] in :has()';
+    fix.disabled = true;
+  };
+</script>
+</body>
+</html>
